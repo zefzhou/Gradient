@@ -5,40 +5,77 @@ require('console-stamp')(console, {
   format: ':date(yyyy/mm/dd HH:MM:ss.l)'
 })
 
-let proxies = []
+
+let configFile = "config.txt";
 
 try {
-  proxies = fs.readFileSync(path.resolve(__dirname, 'proxies.txt'), 'utf-8').split('\n').filter(Boolean)
+  proxies = fs.readFileSync(path.resolve(__dirname, configFile), 'utf-8').split('\n').filter(Boolean)
 } catch (error) {
-  console.log('-> 未找到 proxies.txt 文件或读取出错，将不使用代理启动应用...')
+  console.log('-> 未找到 config.txt 文件或读取出错，将不使用代理启动应用...')
 }
+
 
 // 2. 使用 PROXY 环境变量启动 pm2
 const { execSync } = require('child_process')
-const USER = process.env.APP_USER || ''
-const PASSWORD = process.env.APP_PASS || ''
 
-if (!USER || !PASSWORD) {
-  console.error("请设置 APP_USER 和 APP_PASS 环境变量")
-  process.exit()
-}
 
-if (proxies.length === 0) {
-  console.error("proxies.txt 中未找到代理地址，将不使用代理启动应用...")
-  execSync(`APP_USER='${USER}' APP_PASS='${PASSWORD}' pm2 start app.js --name gradient-bot-no-proxy -l gradient-bot-no-proxy.log`)
-  console.log('-> ✓ 已启动 gradient-bot-no-proxy')
-} else {
-  console.log(`-> 在 proxies.txt 中找到 ${proxies.length} 个代理`)
-  let index = 0
-  for (const proxy of proxies) {
-    const name = `gradient-${index++}`
-    execSync(`PROXY=${proxy} APP_USER='${USER}' APP_PASS='${PASSWORD}' pm2 start app.js --name ${name} -l ${name}.log`)
-    console.log(`-> 已使用代理 ${proxy} 启动 ${name}`)
+
+function readConfig(file) {
+  if (!fs.existsSync(file)) {
+    console.log(`文件 ${file} 不存在`);
+    return [];
   }
 
-  // 3. 保存代理到文件
-  console.log('-> ✓ 所有代理已启动完成！')
+  const data = fs.readFileSync(file, 'utf-8');
+
+  const lines = data.split('\n');
+
+  const result = [];
+
+  lines.forEach(line => {
+    let segs = line.split(';');
+    if (segs.length < 2) {
+      throw new Error('配置格式不正确');
+    }
+    let email = segs[0];
+    let password = segs[1];
+    let proxy = '';
+    if (segs.length > 2) {
+      proxy = segs[2];
+    }
+    if (email && password) {
+      result.push({ email, password, proxy });
+    }
+  });
+
+  return result;
 }
+
+
+// 3.读取配置 启动
+let configs = readConfig(configFile)
+
+
+let noProxyIdx = 0;
+let proxyIdx = 0;
+
+for (let index = 0; index < configs.length; index++) {
+  const config = configs[index];
+
+  console.log(`email = ${config.email}, password = ${config.password}, proxy = ${config.proxy}`)
+
+  if (config.proxy == '') {
+    console.error(`${config.email} 未设置代理, 不使用代理启动应用...`)
+    const name = `gradient-bot-no-proxy-${noProxyIdx++}`;
+    execSync(`APP_USER='${config.email}' APP_PASS='${config.password}' pm2 start app.js --name ${name} -l ${name}.log`)
+    console.log(`-> ✓ 已无代理启动 ${name}`)
+  } else {
+    const name = `gradient-${proxyIdx++}`
+    execSync(`PROXY=${config.proxy} APP_USER='${config.email}' APP_PASS='${config.password}' pm2 start app.js --name ${name} -l ${name}.log`)
+    console.log(`-> ✓ 已使用代理启动 ${name}`)
+  }
+}
+
 
 // 4. 显示 pm2 状态
 execSync('pm2 status')
