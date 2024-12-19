@@ -33,6 +33,9 @@ function readConfig(file) {
   const result = [];
 
   lines.forEach(line => {
+    if (line == "") {
+      return
+    }
     let segs = line.split(';');
     if (segs.length < 2) {
       throw new Error('配置格式不正确');
