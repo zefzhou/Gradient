@@ -1,5 +1,23 @@
 #!/bin/bash
 
+DOCKER_IMG="zefzhou44/gradient"
+
+# 删除 Gradient 容器函数
+function delete_gradient() {
+    container_id=$(docker ps -q --filter "ancestor=$DOCKER_IMG")
+    if [ -z "$container_id" ]; then
+        echo "没有找到运行中的 Gradient 容器"
+    else
+        echo "删除 Gradient 容器..."
+        docker rm -f "$container_id"
+        if [ $? -eq 0 ]; then
+            echo "Gradient 容器已成功删除"
+        else
+            echo "删除容器失败"
+        fi
+    fi
+}
+
 # 检查并安装 Docker
 function check_install_docker() {
     if ! command -v docker &>/dev/null; then
@@ -30,8 +48,6 @@ function check_install_docker() {
     fi
     return 0
 }
-
-DOCKER_IMG="zefzhou44/gradient-mac"
 
 # 启动 Gradient 函数
 function start_gradient() {
@@ -73,78 +89,4 @@ function start_gradient() {
     fi
 }
 
-# 查看 Gradient 日志函数
-function view_logs() {
-    container_id=$(docker ps -q --filter "ancestor=$DOCKER_IMG")
-    if [ -z "$container_id" ]; then
-        echo "没有找到运行中的 Gradient 容器"
-    else
-        echo "正在显示 Gradient 容器日志 (按 Ctrl+C 退出日志查看)..."
-        echo "================================================================"
-        docker logs -f "$container_id"
-    fi
-
-    echo -e "\n按回车键返回主菜单"
-    read
-}
-
-# 删除 Gradient 容器函数
-function remove_container() {
-    container_id=$(docker ps -q --filter "ancestor=$DOCKER_IMG")
-    if [ -z "$container_id" ]; then
-        echo "没有找到运行中的 Gradient 容器"
-    else
-        echo "删除 Gradient 容器..."
-        docker rm -f "$container_id"
-        if [ $? -eq 0 ]; then
-            echo "Gradient 容器已成功删除"
-        else
-            echo "删除容器失败"
-        fi
-    fi
-
-    echo -e "\n按回车键返回主菜单"
-    read
-}
-
-# 主菜单函数
-function main_menu() {
-    while true; do
-        clear
-        echo "fork from 推特 @ferdie_jhovie"
-        echo "I am 推特 @ZefZhou"
-        echo "================================================================"
-        echo "退出脚本，请按键盘 ctrl + C 退出即可"
-        echo "请选择要执行的操作:"
-        echo "1. 启动 Gradient "
-        echo "2. 查看 日志 "
-        echo "3. 删除 容器 "
-        echo "4) 退出"
-        echo "================================================================"
-
-        read -p "请输入选项 [1]: " choice
-
-        case $choice in
-        1)
-            start_gradient
-            ;;
-        2)
-            view_logs
-            ;;
-        3)
-            remove_container
-            ;;
-        4)
-            echo "退出脚本。"
-            exit 0
-            ;;
-        *)
-            echo "无效的选项，请重新选择"
-            sleep 2
-            ;;
-        esac
-    done
-}
-
-# 运行主菜单
-main_menu
+start_gradient
