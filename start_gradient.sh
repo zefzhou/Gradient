@@ -78,13 +78,8 @@ function start_gradient() {
         else
             echo "Docker 容器启动失败，请检查错误信息"
         fi
-
-        echo -e "\n按回车键返回主菜单"
-        read
     else
         echo "Docker 或 Docker Compose 安装失败，请手动安装后重试。"
-        echo "按回车键返回主菜单"
-        read
         return 1
     fi
 }
