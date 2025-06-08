@@ -4,17 +4,19 @@ DOCKER_IMG="zefzhou44/gradient"
 
 # 删除 Gradient 容器函数
 function delete_gradient() {
-    container_id=$(docker ps -q --filter "ancestor=$DOCKER_IMG")
-    if [ -z "$container_id" ]; then
-        echo "没有找到运行中的 Gradient 容器"
-    else
-        echo "删除 Gradient 容器..."
-        docker rm -f "$container_id"
+    IP=$1
+    CONTAINER_NAME="Gradient-${IP//./-}"
+
+    if docker ps -a --format '{{.Names}}' | grep -Fxq "$CONTAINER_NAME"; then
+        echo "删除 $CONTAINER_NAME 容器..."
+        docker rm -f "$CONTAINER_NAME"
         if [ $? -eq 0 ]; then
-            echo "Gradient 容器已成功删除"
+            echo "$CONTAINER_NAME 容器删除成功"
         else
-            echo "删除容器失败"
+            echo "$CONTAINER_NAME 容器删除失败"
         fi
+    else
+        echo "$CONTAINER_NAME 容器不存在,不需要删除"
     fi
 }
 
