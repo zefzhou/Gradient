@@ -20,4 +20,4 @@ function delete_gradient() {
     fi
 }
 
-delete_gradient
+delete_gradient $1

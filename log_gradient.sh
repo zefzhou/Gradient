@@ -13,4 +13,4 @@ function view_logs() {
     fi
 }
 
-view_logs
+view_logs $1

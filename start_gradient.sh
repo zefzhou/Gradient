@@ -78,4 +78,4 @@ function start_gradient() {
     fi
 }
 
-start_gradient
+start_gradient $1
