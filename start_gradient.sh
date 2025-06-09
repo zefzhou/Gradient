@@ -47,7 +47,7 @@ function start_gradient() {
         # 重启容器
         if docker ps -a --format '{{.Names}}' | grep -Fxq "$CONTAINER_NAME"; then
             echo "重启 $CONTAINER_NAME 容器..."
-            docker resart $CONTAINER_NAME
+            docker restart $CONTAINER_NAME
             if [ $? -eq 0 ]; then
                 echo "$CONTAINER_NAME 容器重启成功"
             else
