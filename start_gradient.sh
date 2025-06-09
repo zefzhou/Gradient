@@ -44,34 +44,34 @@ function start_gradient() {
         echo "Current directory: $(pwd)"
         echo "Make sure you have config.txt !!!"
 
-        # 强制删除容器
+        # 重启容器
         if docker ps -a --format '{{.Names}}' | grep -Fxq "$CONTAINER_NAME"; then
-            echo "删除 $CONTAINER_NAME 容器..."
-            docker rm -f "$CONTAINER_NAME"
+            echo "重启 $CONTAINER_NAME 容器..."
+            docker resart $CONTAINER_NAME
             if [ $? -eq 0 ]; then
-                echo "$CONTAINER_NAME 容器删除成功"
+                echo "$CONTAINER_NAME 容器重启成功"
             else
-                echo "$CONTAINER_NAME 容器删除失败"
+                echo "$CONTAINER_NAME 容器重启失败"
             fi
         else
+            # 运行新容器
             echo "$CONTAINER_NAME 容器不存在, 不需要删除"
+            echo -e "\n开始运行 Docker 容器..."
+            CONFIG_FILE="$(pwd)/${CONFIG_FILE_NAME}.txt"
+            docker run -d \
+                --name "$CONTAINER_NAME" \
+                -v "$CONFIG_FILE:/app/config.txt" \
+                $DOCKER_IMG
+
+            if [ $? -eq 0 ]; then
+                echo "$CONTAINER_NAME 容器已成功启动！"
+                echo "当前运行的容器："
+                docker ps | grep gradient
+            else
+                echo "$CONTAINER_NAME 容器启动失败，请检查错误信息"
+            fi
         fi
 
-        # 运行新容器
-        echo -e "\n开始运行 Docker 容器..."
-        CONFIG_FILE="$(pwd)/${CONFIG_FILE_NAME}.txt"
-        docker run -d \
-            --name "$CONTAINER_NAME" \
-            -v "$CONFIG_FILE:/app/config.txt" \
-            $DOCKER_IMG
-
-        if [ $? -eq 0 ]; then
-            echo "$CONTAINER_NAME 容器已成功启动！"
-            echo "当前运行的容器："
-            docker ps | grep gradient
-        else
-            echo "$CONTAINER_NAME 容器启动失败，请检查错误信息"
-        fi
     else
         echo "Docker 或 Docker Compose 安装失败，请手动安装后重试。"
         return 1
